@@ -122,48 +122,39 @@ void do_admin_modification(int sockfd,MSG *msg)//管理员修改
 		{
 			case 1:
 				printf("请输入姓名");
-				scanf("%s",&msg->info.name);
-				getchar();
+				msg->flags = 1;
 				break;			
 			case 2:
 				printf("请输入年龄");
-				scanf("%d",&msg->info.age);
-				getchar();
+				msg->flags = 2;
 				break;			
 			case 3:
 				printf("请输入地址");
-				scanf("%s",&msg->info.addr);
-				getchar();
+				msg->flags = 3;
 				break;			
 			case 4:
 				printf("请输入手机号");
-				scanf("%s",&msg->info.phone);
-				getchar();
+				msg->flags = 4;
 				break;			
 			case 5:
 				printf("请输入值位");
-				scanf("%s",&msg->info.work);
-				getchar();
+				msg->flags = 5;
 				break;			
 			case 6:
 				printf("请输入工资");
-				scanf("%lf",&msg->info.salary);
-				getchar();
+				msg->flags = 6;
 				break;			
 			case 7:
 				printf("请输入入职日期");
-				scanf("%s",&msg->info.date);
-				getchar();
+				msg->flags = 7;
 				break;			
 			case 8:
 				printf("请输入等级");
-				scanf("%d",&msg->info.level);
-				getchar();
+				msg->flags = 8;
 				break;		
 			case 9:
 				printf("请输入密码");
-				scanf("%s",&msg->info.passwd);
-				getchar();
+				msg->flags = 9;
 				break;	
 			case 10:
 				printf("退出\n");
@@ -176,11 +167,16 @@ void do_admin_modification(int sockfd,MSG *msg)//管理员修改
 				printf("输入错误\n");
 
 		}
+
+	memset(&msg->recvmsg, 0, sizeof(msg->recvmsg));
+	scanf("%s",msg->recvmsg);
+	getchar();
 	
 	send(sockfd, msg, sizeof(MSG), 0);
 	printf("%s\n", msg->recvmsg);
 	
-
+	recv(sockfd, msg, sizeof(MSG), 0);
+	printf("%s",msg->recvmsg);
 
 	
 
