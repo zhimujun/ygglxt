@@ -19,6 +19,14 @@
 
 #include "common.h"
 
+void show_userinfo(MSG *msg){
+
+	printf("%s	\n",msg->recvmsg);
+
+}
+
+
+
 /**************************************
  *函数名：do_query
  *参   数：消息结构体
@@ -27,6 +35,61 @@
 void do_admin_query(int sockfd,MSG *msg)
 {
 	printf("------------%s-----------%d.\n",__func__,__LINE__);
+	//选择查询方式--填充封装命令请求---发送数据---等待服务器响应 
+	int n;
+	msg->msgtype = ADMIN_QUERY;
+	
+	while(1)
+	{
+		memset(&msg->info,0,sizeof(staff_info_t));
+		if(msg->usertype == ADMIN)
+		{
+			printf("*************************************************************\n");
+			printf("******* 1：按人名查找  	2：查找所有 	3：退出	      *******\n");
+			printf("*************************************************************\n");
+			printf("请输入您的选择（数字）>>");
+			scanf("%d",&n);
+			getchar();
+
+			switch(n)
+			{
+				case 1:
+					msg->flags = 1;//按人名查找
+					break;
+				case 2:
+					msg->flags = 0;//默认查找所有员工
+					break;
+				case 3:
+					return;
+			}	
+		}
+
+
+		if(msg->flags == 1)
+		{
+			printf("请输入您要查找的用户名：");
+			scanf("%s",msg->info.name);
+			getchar();
+			
+			send(sockfd, msg, sizeof(MSG), 0);
+			recv(sockfd, msg, sizeof(MSG), 0);
+			printf("工号\t用户类型\t 姓名\t密码\t年龄\t电话\t地址\t职位\t入职年月\t等级\t 工资\n");
+			show_userinfo(msg);
+
+		}else{
+			send(sockfd, msg, sizeof(MSG), 0);
+			printf("工号\t用户类型\t 姓名\t密码\t年龄\t电话\t地址\t职位\t入职年月\t等级\t 工资\n");
+			while (1)
+			{	
+				//循环接受服务器发送的用户数据
+				recv(sockfd, msg, sizeof(MSG), 0);
+				if(strncmp(msg->recvmsg , "over*",5) ==0)
+					break;
+				show_userinfo(msg);
+			}
+		}	
+	}	
+	printf("查找结束\n");	
 
 
 
@@ -41,7 +104,85 @@ void do_admin_query(int sockfd,MSG *msg)
 void do_admin_modification(int sockfd,MSG *msg)//管理员修改
 {
 	printf("------------%s-----------%d.\n",__func__,__LINE__);
+	printf("请输入您要修改的工号：");
+	scanf("%d",&msg->info.no);
+	getchar();
+	
+	printf("*******************请输入要修改的选项********************\n");
+	printf("******	1：姓名	  2：年龄	3：家庭住址   4：电话  ******\n");
+	printf("******	5：职位	   6：工资  7：入职年月   8：评级  ******\n");
+	printf("******	9：密码	 10：退出				          *******\n");
+	printf("*************************************************************\n");
+	printf("请输入您的选择（数字）>>");
+	scanf("%d",&msg->flags);
+	getchar();
 
+	
+	switch(msg->flags)
+		{
+			case 1:
+				printf("请输入姓名");
+				scanf("%s",&msg->info.name);
+				getchar();
+				break;			
+			case 2:
+				printf("请输入年龄");
+				scanf("%d",&msg->info.age);
+				getchar();
+				break;			
+			case 3:
+				printf("请输入地址");
+				scanf("%s",&msg->info.addr);
+				getchar();
+				break;			
+			case 4:
+				printf("请输入手机号");
+				scanf("%s",&msg->info.phone);
+				getchar();
+				break;			
+			case 5:
+				printf("请输入值位");
+				scanf("%s",&msg->info.work);
+				getchar();
+				break;			
+			case 6:
+				printf("请输入工资");
+				scanf("%lf",&msg->info.salary);
+				getchar();
+				break;			
+			case 7:
+				printf("请输入入职日期");
+				scanf("%s",&msg->info.date);
+				getchar();
+				break;			
+			case 8:
+				printf("请输入等级");
+				scanf("%d",&msg->info.level);
+				getchar();
+				break;		
+			case 9:
+				printf("请输入密码");
+				scanf("%s",&msg->info.passwd);
+				getchar();
+				break;	
+			case 10:
+				printf("退出\n");
+				msg->msgtype = QUIT;
+				send(sockfd, msg, sizeof(MSG), 0);
+				close(sockfd);
+				exit(0);
+				break;					
+			default:
+				printf("输入错误\n");
+
+		}
+	
+	send(sockfd, msg, sizeof(MSG), 0);
+	printf("%s\n", msg->recvmsg);
+	
+
+
+	
 
 }
 
@@ -141,7 +282,18 @@ void admin_menu(int sockfd,MSG *msg)
  ****************************************/
 void do_user_query(int sockfd,MSG *msg)
 {
+	memset(&msg->info, 0, sizeof(msg->info));
 	printf("------------%s-----------%d.\n",__func__,__LINE__);
+	msg->msgtype = USER_QUERY;
+	
+	send(sockfd, msg, sizeof(MSG), 0);
+
+	printf("工号\t用户类型\t 姓名\t密码\t年龄\t电话\t地址\t职位\t入职年月\t等级\t 工资\n");
+	printf("==========================================================================\n");
+	int i=0;
+
+		recv(sockfd, msg, sizeof(MSG), 0);
+		printf("%s  \n",msg->recvmsg);
 
 }
 
@@ -155,6 +307,55 @@ void do_user_query(int sockfd,MSG *msg)
 void do_user_modification(int sockfd,MSG *msg)
 {
 	printf("------------%s-----------%d.\n",__func__,__LINE__);
+
+	msg->msgtype = USER_MODIFY;
+	printf("请输入您要修改的工号:");
+	scanf("%d",&msg->info.no);
+	getchar();
+	
+	printf("***********请输入要修改的选项(其他信息亲请联系管理员)*********\n");
+	printf("*********** 1：家庭住址   2：电话  3：密码  4：退出***********\n");
+	printf("**************************************************************\n");
+
+	scanf("%d",&msg->flags);
+	getchar();
+
+	switch(msg->flags)
+		{
+			case 1 :
+				printf("请输入家庭住址");
+				msg->flags = 1;
+			break;
+
+			case 2 :
+				printf("请输入电话");
+				msg->flags = 2;
+			break;	
+			
+			case 3 :
+				printf("请输入密码");
+				msg->flags = 3;
+			break;
+			
+			case 4:
+				msg->msgtype = QUIT;
+				send(sockfd, msg, sizeof(MSG), 0);
+				close(sockfd);
+				exit(0);
+				break;
+				
+			default:
+				printf("输入有误！\n");
+		}
+	
+	memset(&msg->recvmsg, 0, sizeof(msg->recvmsg));
+	scanf("%s",msg->recvmsg);
+	getchar();
+	send(sockfd, msg, sizeof(MSG), 0);
+	
+	recv(sockfd, msg, sizeof(MSG), 0);
+	printf("%s",msg->recvmsg);
+
 
 }
 
